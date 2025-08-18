@@ -2,6 +2,79 @@
 
 import { Device } from './deviceService';
 import { ProcurementItem } from './procurementService';
+import { Room } from './roomService';
+
+// Mock data for rooms
+const mockRooms: Room[] = [
+  {
+    id: '1',
+    code: 'A101',
+    name: 'Phòng học Khoa Công nghệ Thông tin',
+    area: 80,
+    capacity: 40,
+    type: 'Phòng học',
+    floor: '1',
+    building: 'Tòa A',
+    description: 'Phòng học chính cho khoa CNTT',
+    status: 'Hoạt động',
+    department: 'Khoa Công nghệ Thông tin',
+    equipment: 'Máy chiếu, bảng thông minh, điều hòa',
+    note: 'Phòng học lý thuyết',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '2',
+    code: 'LAB201',
+    name: 'Phòng thí nghiệm Hóa học',
+    area: 60,
+    capacity: 25,
+    type: 'Phòng thí nghiệm',
+    floor: '2',
+    building: 'Tòa B',
+    description: 'Phòng thí nghiệm hóa học cơ bản',
+    status: 'Hoạt động',
+    department: 'Khoa Hóa học',
+    equipment: 'Bàn thí nghiệm, tủ hóa chất, hệ thống thông gió',
+    note: 'Cần trang bị bảo hộ khi vào',
+    created_at: '2024-01-02T00:00:00Z',
+    updated_at: '2024-01-02T00:00:00Z'
+  },
+  {
+    id: '3',
+    code: 'C301',
+    name: 'Phòng thực hành CNTT 1',
+    area: 70,
+    capacity: 35,
+    type: 'Phòng thực hành công nghệ thông tin',
+    floor: '3',
+    building: 'Tòa C',
+    description: 'Phòng thực hành lập trình và ứng dụng công nghệ thông tin',
+    status: 'Bảo trì',
+    department: 'Khoa Công nghệ Thông tin',
+    equipment: 'Máy tính cá nhân, máy chiếu, bảng thông minh, mạng LAN tốc độ cao',
+    note: 'Đang nâng cấp hệ thống máy tính',
+    created_at: '2024-01-03T00:00:00Z',
+    updated_at: '2024-01-03T00:00:00Z'
+  },
+  {
+    id: '4',
+    code: 'HALL01',
+    name: 'Hội trường Đa năng',
+    area: 200,
+    capacity: 150,
+    type: 'Hội trường',
+    floor: '1',
+    building: 'Tòa D',
+    description: 'Hội trường tổ chức sự kiện lớn',
+    status: 'Hoạt động',
+    department: 'Phòng Tổ chức Sự kiện',
+    equipment: 'Sân khấu, âm thanh chuyên nghiệp, đèn LED',
+    note: 'Cần đặt lịch trước 1 tuần',
+    created_at: '2024-01-04T00:00:00Z',
+    updated_at: '2024-01-04T00:00:00Z'
+  }
+];
 
 // Mock data for devices
 const mockDevices: Device[] = [
@@ -251,6 +324,108 @@ export class MockProcurementService {
       byCategory,
       totalValue,
       totalActualValue
+    });
+  }
+}
+
+// Mock Room Service
+export class MockRoomService {
+  private static rooms: Room[] = [...mockRooms];
+
+  static async getAllRooms(): Promise<Room[]> {
+    return Promise.resolve([...this.rooms]);
+  }
+
+  static async getRoomById(id: string): Promise<Room | null> {
+    const room = this.rooms.find(r => r.id === id);
+    return Promise.resolve(room || null);
+  }
+
+  static async createRoom(room: Omit<Room, 'id' | 'created_at' | 'updated_at'>): Promise<Room> {
+    const newRoom: Room = {
+      ...room,
+      id: Date.now().toString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    this.rooms.unshift(newRoom);
+    return Promise.resolve(newRoom);
+  }
+
+  static async updateRoom(id: string, updates: Partial<Room>): Promise<Room> {
+    const index = this.rooms.findIndex(r => r.id === id);
+    if (index === -1) {
+      throw new Error('Room not found');
+    }
+    
+    this.rooms[index] = {
+      ...this.rooms[index],
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+    
+    return Promise.resolve(this.rooms[index]);
+  }
+
+  static async deleteRoom(id: string): Promise<boolean> {
+    const index = this.rooms.findIndex(r => r.id === id);
+    if (index === -1) {
+      return Promise.resolve(false);
+    }
+    
+    this.rooms.splice(index, 1);
+    return Promise.resolve(true);
+  }
+
+  static async getRoomsByStatus(status: string): Promise<Room[]> {
+    const rooms = this.rooms.filter(r => r.status === status);
+    return Promise.resolve(rooms);
+  }
+
+  static async getRoomsByType(type: string): Promise<Room[]> {
+    const rooms = this.rooms.filter(r => r.type === type);
+    return Promise.resolve(rooms);
+  }
+
+  static async searchRooms(query: string): Promise<Room[]> {
+    const rooms = this.rooms.filter(r => 
+      r.name.toLowerCase().includes(query.toLowerCase()) ||
+      r.code.toLowerCase().includes(query.toLowerCase()) ||
+      (r.building && r.building.toLowerCase().includes(query.toLowerCase()))
+    );
+    return Promise.resolve(rooms);
+  }
+
+  static async getStatistics(): Promise<{
+    total: number;
+    byStatus: Record<string, number>;
+    byType: Record<string, number>;
+    totalCapacity: number;
+    totalArea: number;
+  }> {
+    const rooms = this.rooms;
+    
+    const byStatus: Record<string, number> = {};
+    const byType: Record<string, number> = {};
+    let totalCapacity = 0;
+    let totalArea = 0;
+    
+    rooms.forEach(room => {
+      byStatus[room.status] = (byStatus[room.status] || 0) + 1;
+      if (room.type) {
+        byType[room.type] = (byType[room.type] || 0) + 1;
+      }
+      totalCapacity += room.capacity || 0;
+      totalArea += room.area || 0;
+    });
+    
+    return Promise.resolve({
+      total: rooms.length,
+      byStatus,
+      byType,
+      totalCapacity,
+      totalArea
     });
   }
 }

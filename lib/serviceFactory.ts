@@ -1,7 +1,8 @@
 // Service factory để chọn giữa Supabase service thật và mock service
 import { Device } from './deviceService';
 import { ProcurementItem } from './procurementService';
-import { MockDeviceService, MockProcurementService } from './mockService';
+import { Room } from './roomService';
+import { MockDeviceService, MockProcurementService, MockRoomService } from './mockService';
 
 // Kiểm tra xem có sử dụng mock hay không
 const USE_MOCK = process.env.USE_MOCK_DATA === 'true' || 
@@ -30,5 +31,15 @@ export const getProcurementService = () => {
   return ProcurementService;
 };
 
+// Room service factory
+export const getRoomService = () => {
+  if (USE_MOCK) {
+    return MockRoomService;
+  }
+  // Import dynamic để tránh lỗi khi build
+  const { RoomService } = require('./roomService');
+  return RoomService;
+};
+
 // Export types
-export type { Device, ProcurementItem };
+export type { Device, ProcurementItem, Room };
