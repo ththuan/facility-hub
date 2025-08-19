@@ -7,7 +7,7 @@ export default function ProfilePage() {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || '',
+    fullName: user?.full_name || '',
     email: user?.email || '',
     phone: user?.phone || '',
     department: user?.department || '',
@@ -88,7 +88,7 @@ export default function ProfilePage() {
               <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
               <div className="flex items-center space-x-3 mt-2">
                 <span className={`px-3 py-1 text-sm font-medium rounded-full ${getRoleColor(user.role.name)}`}>
-                  {user.role.displayName}
+                  {user.role.display_name}
                 </span>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   {user.department}
@@ -221,7 +221,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Quyền hạn
               </label>
-              <p className="text-gray-900 dark:text-gray-100 py-2">{user.role.displayName}</p>
+              <p className="text-gray-900 dark:text-gray-100 py-2">{user.role.display_name}</p>
             </div>
           </div>
         </div>
@@ -235,25 +235,25 @@ export default function ProfilePage() {
             <div>
               <span className="text-gray-600 dark:text-gray-400">Tạo tài khoản:</span>
               <span className="ml-2 text-gray-900 dark:text-gray-100">
-                {new Date(user.createdAt).toLocaleString('vi-VN')}
+                {new Date(user.created_at).toLocaleString('vi-VN')}
               </span>
             </div>
-            {user.lastLogin && (
+            {user.last_login && (
               <div>
                 <span className="text-gray-600 dark:text-gray-400">Đăng nhập lần cuối:</span>
                 <span className="ml-2 text-gray-900 dark:text-gray-100">
-                  {new Date(user.lastLogin).toLocaleString('vi-VN')}
+                  {new Date(user.last_login).toLocaleString('vi-VN')}
                 </span>
               </div>
             )}
             <div>
               <span className="text-gray-600 dark:text-gray-400">Trạng thái:</span>
               <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                user.isActive 
+                user.status === 'active' 
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
                   : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
               }`}>
-                {user.isActive ? 'Hoạt động' : 'Tạm khóa'}
+                {user.status === 'active' ? 'Hoạt động' : 'Tạm khóa'}
               </span>
             </div>
           </div>

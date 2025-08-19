@@ -32,15 +32,15 @@ export default function UnauthorizedPage() {
             <div className="flex items-center justify-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
                 <span className="text-blue-600 dark:text-blue-400 font-medium">
-                  {user.fullName.charAt(0)}
+                  {user.full_name.charAt(0)}
                 </span>
               </div>
               <div className="text-left">
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {user.fullName}
+                  {user.full_name}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {user.role.displayName} • {user.department}
+                  {user.role.display_name} • {user.department}
                 </div>
               </div>
             </div>
