@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { authManager, User, UserRole } from '@/lib/authManager';
+import { SupabaseAuthService, User, UserRole } from '@/lib/supabaseAuthService';
 
 export default function AdminUsersPage() {
   const { user: currentUser, isAdmin } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdminUser, setIsAdminUser] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -24,20 +27,32 @@ export default function AdminUsersPage() {
   });
 
   useEffect(() => {
-    if (!isAdmin()) {
-      return;
-    }
+    const checkAdminAndLoadData = async () => {
+      const adminCheck = await isAdmin();
+      setIsAdminUser(adminCheck);
+      
+      if (!adminCheck) {
+        return;
+      }
+      
+      loadData();
+    };
     
-    loadData();
-  }, []);
+    checkAdminAndLoadData();
+  }, [isAdmin]);
 
-  const loadData = () => {
+  const loadData = async () => {
     setLoading(true);
-    const allUsers = authManager.getAllUsers();
-    const allRoles = authManager.getAllRoles();
-    setUsers(allUsers);
-    setRoles(allRoles);
-    setLoading(false);
+    try {
+      const allUsers = await SupabaseAuthService.getAllUsers();
+      const allRoles = await SupabaseAuthService.getAllRoles();
+      setUsers(allUsers);
+      setRoles(allRoles);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -62,23 +77,27 @@ export default function AdminUsersPage() {
       const selectedRole = roles.find(r => r.id === formData.roleId);
       if (!selectedRole) return;
 
-      const newUser = authManager.createUser({
+      const result = await SupabaseAuthService.createUser({
         username: formData.username,
         email: formData.email,
-        fullName: formData.fullName,
+        full_name: formData.fullName,
         password: formData.password,
-        role: selectedRole,
+        role_id: formData.roleId,
         department: formData.department,
         phone: formData.phone,
-        position: formData.position,
-        isActive: formData.isActive
+        position: formData.position
       });
 
-      loadData();
-      setShowCreateModal(false);
-      resetForm();
+      if (result.success) {
+        await loadData();
+        setShowCreateModal(false);
+        resetForm();
+      } else {
+        alert(result.message);
+      }
     } catch (error) {
       console.error('Lỗi tạo người dùng:', error);
+      alert('Có lỗi xảy ra khi tạo người dùng');
     }
   };
 
@@ -88,37 +107,50 @@ export default function AdminUsersPage() {
     if (!editingUser) return;
 
     try {
-      const selectedRole = roles.find(r => r.id === formData.roleId);
-      if (!selectedRole) return;
-
-      authManager.updateUser(editingUser.id, {
+      const updates = {
         username: formData.username,
         email: formData.email,
-        fullName: formData.fullName,
-        role: selectedRole,
+        full_name: formData.fullName,
+        role_id: formData.roleId,
         department: formData.department,
         phone: formData.phone,
         position: formData.position,
-        isActive: formData.isActive
-      });
+        status: formData.isActive ? 'active' as const : 'inactive' as const
+      };
 
-      loadData();
-      setEditingUser(null);
-      resetForm();
+      const result = await SupabaseAuthService.updateUser(editingUser.id, updates);
+      
+      if (result.success) {
+        await loadData();
+        setEditingUser(null);
+        resetForm();
+      } else {
+        alert(result.message);
+      }
     } catch (error) {
       console.error('Lỗi cập nhật người dùng:', error);
+      alert('Có lỗi xảy ra khi cập nhật người dùng');
     }
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (userId === currentUser?.id) {
       alert('Bạn không thể xóa tài khoản của chính mình');
       return;
     }
 
     if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-      authManager.deleteUser(userId);
-      loadData();
+      try {
+        const result = await SupabaseAuthService.deleteUser(userId);
+        if (result.success) {
+          await loadData();
+        } else {
+          alert(result.message);
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Có lỗi xảy ra khi xóa người dùng');
+      }
     }
   };
 
@@ -127,17 +159,38 @@ export default function AdminUsersPage() {
     setFormData({
       username: user.username,
       email: user.email,
-      fullName: user.fullName,
+      fullName: user.full_name,
       password: '',
       roleId: user.role.id,
       department: user.department,
       phone: user.phone || '',
       position: user.position || '',
-      isActive: user.isActive
+      isActive: user.status === 'active'
     });
   };
 
-  if (!isAdmin()) {
+  const handleResetPassword = async () => {
+    if (!resetPasswordUser || !newPassword) {
+      alert('Vui lòng nhập mật khẩu mới');
+      return;
+    }
+
+    try {
+      const result = await SupabaseAuthService.fixUserPassword(resetPasswordUser.username, newPassword);
+      if (result.success) {
+        alert('Đặt lại mật khẩu thành công!');
+        setResetPasswordUser(null);
+        setNewPassword('');
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('Có lỗi xảy ra khi đặt lại mật khẩu');
+    }
+  };
+
+  if (!isAdminUser && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -224,11 +277,11 @@ export default function AdminUsersPage() {
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
                           {user.avatar ? (
-                            <img src={user.avatar} alt={user.fullName} className="h-10 w-10 rounded-full object-cover" />
+                            <img src={user.avatar} alt={user.full_name || 'User'} className="h-10 w-10 rounded-full object-cover" />
                           ) : (
-                            user.fullName
+                            (user.full_name || user.username || 'U')
                               .split(' ')
-                              .map(name => name.charAt(0))
+                              .map((name: string) => name.charAt(0))
                               .join('')
                               .toUpperCase()
                               .slice(0, 2)
@@ -237,7 +290,7 @@ export default function AdminUsersPage() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {user.fullName}
+                          {user.full_name}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
                           {user.email}
@@ -247,7 +300,7 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleColor(user.role.name)}`}>
-                      {user.role.displayName}
+                      {user.role.display_name}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
@@ -255,15 +308,15 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      user.isActive 
+                      user.status === 'active' 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
                         : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                     }`}>
-                      {user.isActive ? 'Hoạt động' : 'Tạm khóa'}
+                      {user.status === 'active' ? 'Hoạt động' : 'Tạm khóa'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('vi-VN') : 'Chưa đăng nhập'}
+                    {user.last_login ? new Date(user.last_login).toLocaleDateString('vi-VN') : 'Chưa đăng nhập'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
@@ -271,6 +324,15 @@ export default function AdminUsersPage() {
                       className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
                     >
                       Chỉnh sửa
+                    </button>
+                    <button
+                      onClick={() => {
+                        setResetPasswordUser(user);
+                        setNewPassword('');
+                      }}
+                      className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3"
+                    >
+                      Đổi MK
                     </button>
                     {user.id !== currentUser?.id && (
                       <button
@@ -338,7 +400,7 @@ export default function AdminUsersPage() {
                 >
                   <option value="">Chọn quyền hạn</option>
                   {roles.map(role => (
-                    <option key={role.id} value={role.id}>{role.displayName}</option>
+                    <option key={role.id} value={role.id}>{role.display_name}</option>
                   ))}
                 </select>
                 <input
@@ -414,7 +476,7 @@ export default function AdminUsersPage() {
                 >
                   <option value="">Chọn quyền hạn</option>
                   {roles.map(role => (
-                    <option key={role.id} value={role.id}>{role.displayName}</option>
+                    <option key={role.id} value={role.id}>{role.display_name}</option>
                   ))}
                 </select>
                 <input
@@ -456,6 +518,52 @@ export default function AdminUsersPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {resetPasswordUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                Đặt lại mật khẩu cho {resetPasswordUser.username}
+              </h3>
+              <div className="mb-4">
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Mật khẩu mới
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
+                  placeholder="Nhập mật khẩu mới"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetPasswordUser(null);
+                    setNewPassword('');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  disabled={!newPassword}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  Đặt lại mật khẩu
+                </button>
+              </div>
             </div>
           </div>
         </div>

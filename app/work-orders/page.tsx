@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabaseService, WorkOrder, Room, Device } from "@/lib/supabaseService";
+import { useAuth } from "@/contexts/AuthContext";
 
 const getStatusColor = (status: WorkOrder['status']) => {
   switch (status) {
@@ -40,6 +41,7 @@ const getPriorityText = (priority: WorkOrder['priority']) => {
 };
 
 export default function WorkOrdersPage() {
+  const { isAdmin } = useAuth();
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -172,12 +174,14 @@ export default function WorkOrdersPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Quản lý Work Orders</h1>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            + Thêm Work Order
-          </button>
+          {isAdmin() && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              + Thêm Work Order
+            </button>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -320,18 +324,22 @@ export default function WorkOrdersPage() {
                       {workOrder.dueDate ? formatDate(workOrder.dueDate) : '-'}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleEdit(workOrder)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(workOrder.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Xóa
-                      </button>
+                      {isAdmin() && (
+                        <>
+                          <button
+                            onClick={() => handleEdit(workOrder)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDelete(workOrder.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Xóa
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}

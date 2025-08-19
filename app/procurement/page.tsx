@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react';
 import { getProcurementService } from '../../lib/serviceFactory';
 import type { ProcurementItem } from '../../lib/serviceFactory';
+import { useAuth } from "@/contexts/AuthContext";
 
 const ProcurementService = getProcurementService();
 
 export default function ProcurementPage() {
+  const { isAdmin } = useAuth();
+  
   const [items, setItems] = useState<ProcurementItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -319,12 +322,14 @@ export default function ProcurementPage() {
           >
             📋 Báo cáo Chi tiết  
           </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
-          >
-            + Thêm yêu cầu
-          </button>
+          {isAdmin() && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            >
+              + Thêm yêu cầu
+            </button>
+          )}
         </div>
       </div>
 
@@ -435,20 +440,22 @@ export default function ProcurementPage() {
                     }`}>
                       {getPriorityText(item.priority)}
                     </div>
-                    <div className="mt-2 space-x-2">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="text-blue-600 hover:text-blue-800 text-xs"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id!)}
-                        className="text-red-600 hover:text-red-800 text-xs"
-                      >
-                        Xóa
-                      </button>
-                    </div>
+                    {isAdmin() && (
+                      <div className="mt-2 space-x-2">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-blue-600 hover:text-blue-800 text-xs"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id!)}
+                          className="text-red-600 hover:text-red-800 text-xs"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {item.notes && (

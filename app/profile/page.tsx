@@ -70,9 +70,9 @@ export default function ProfilePage() {
             <div className="relative">
               <div className="w-24 h-24 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-medium">
                 {user.avatar ? (
-                  <img src={user.avatar} alt={user.fullName} className="w-24 h-24 rounded-full object-cover" />
+                  <img src={user.avatar} alt={user.full_name} className="w-24 h-24 rounded-full object-cover" />
                 ) : (
-                  user.fullName
+                  user.full_name
                     .split(' ')
                     .map(name => name.charAt(0))
                     .join('')
@@ -83,7 +83,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {user.fullName}
+                {user.full_name}
               </h2>
               <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
               <div className="flex items-center space-x-3 mt-2">
@@ -116,7 +116,7 @@ export default function ProfilePage() {
                     onClick={() => {
                       setIsEditing(false);
                       setFormData({
-                        fullName: user.fullName,
+                        fullName: user.full_name,
                         email: user.email,
                         phone: user.phone || '',
                         department: user.department,
@@ -149,7 +149,7 @@ export default function ProfilePage() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
                 />
               ) : (
-                <p className="text-gray-900 dark:text-gray-100 py-2">{user.fullName}</p>
+                <p className="text-gray-900 dark:text-gray-100 py-2">{user.full_name}</p>
               )}
             </div>
 

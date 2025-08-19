@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import { getRoomService } from '../../lib/serviceFactory';
 import type { Room } from '../../lib/serviceFactory';
+import { useAuth } from "@/contexts/AuthContext";
 
 const RoomService = getRoomService();
 
 export default function RoomsPage() {
+  const { isAdmin } = useAuth();
+  
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -165,12 +168,14 @@ export default function RoomsPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Quản lý Phòng, Khoa, Lớp học</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          + Thêm Phòng mới
-        </button>
+        {isAdmin() && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          >
+            + Thêm Phòng mới
+          </button>
+        )}
       </div>
 
       {error && (
@@ -242,7 +247,7 @@ export default function RoomsPage() {
           >
             <option value="">Tất cả loại</option>
             <option value="Phòng học">Phòng học</option>
-            <option value="Lớp học">Lớp học</option>
+            <option value="Phòng thực hành công nghệ thông tin">Phòng thực hành công nghệ thông tin</option>
             <option value="Phòng thí nghiệm">Phòng thí nghiệm</option>
             <option value="Hội trường">Hội trường</option>
             <option value="Văn phòng">Văn phòng</option>
@@ -340,18 +345,22 @@ export default function RoomsPage() {
                   )}
 
                   <div className="flex justify-end space-x-2 pt-3 border-t border-gray-100 dark:border-gray-600">
-                    <button
-                      onClick={() => handleEdit(room)}
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium"
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      onClick={() => handleDelete(room.id!)}
-                      className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-sm font-medium"
-                    >
-                      Xóa
-                    </button>
+                    {isAdmin() && (
+                      <>
+                        <button
+                          onClick={() => handleEdit(room)}
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-sm font-medium"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(room.id!)}
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 text-sm font-medium"
+                        >
+                          Xóa
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

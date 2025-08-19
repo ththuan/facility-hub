@@ -47,7 +47,7 @@ P002,Phòng họp lớn,50,20,Phòng họp,Tầng 2,Tòa A,Hoạt động,Phòng
 P003,Lớp học 101,80,40,Lớp học,Tầng 1,Tòa B,Hoạt động,Lớp học chính có bảng trắng
 P004,Phòng thí nghiệm Hóa,60,30,Phòng lab,Tầng 2,Tòa B,Hoạt động,Phòng thí nghiệm khoa học
 P005,Kho thiết bị,100,0,Kho,Tầng trệt,Tòa C,Hoạt động,Kho lưu trữ thiết bị IT
-P006,Lớp máy tính,70,35,Lớp học,Tầng 1,Tòa B,Hoạt động,Phòng học có máy tính
+P006,Lớp máy tính,70,35,Phòng thực hành công nghệ thông tin,Tầng 1,Tòa B,Hoạt động,Phòng học có máy tính
 P007,Phòng máy chủ,20,5,Phòng kỹ thuật,Tầng trệt,Tòa A,Hoạt động,Phòng chứa server và thiết bị mạng
 P008,Phòng nghỉ nhân viên,30,15,Phòng phục vụ,Tầng 1,Tòa A,Hoạt động,Khu vực nghỉ ngơi có bếp nhỏ
 P009,Phòng vệ sinh công nghiệp,15,0,Phòng phục vụ,Tầng trệt,Tòa C,Hoạt động,Phòng chứa thiết bị vệ sinh

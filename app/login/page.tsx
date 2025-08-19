@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { authManager } from '@/lib/authManager';
+import { SupabaseAuthService } from '@/lib/supabaseAuthService';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -16,9 +16,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Redirect if already logged in
-    if (authManager.isLoggedIn()) {
-      router.push('/dashboard');
-    }
+    const checkAuth = async () => {
+      const user = await SupabaseAuthService.getCurrentUser();
+      if (user) {
+        router.push('/dashboard');
+      }
+    };
+    checkAuth();
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +37,7 @@ export default function LoginPage() {
     }
 
     try {
-      const result = await authManager.login(formData.username, formData.password);
+      const result = await SupabaseAuthService.login(formData.username, formData.password);
       
       if (result.success) {
         // Redirect to dashboard

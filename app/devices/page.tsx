@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabaseService, Device, Room } from "@/lib/supabaseService";
+import { useAuth } from "@/contexts/AuthContext";
 
 const getStatusText = (status: string) => {
   switch (status) {
@@ -34,6 +35,8 @@ const generateQRCodeUrl = (deviceCode: string) => {
 };
 
 export default function DevicesPage() {
+  const { isAdmin } = useAuth(); // Get auth context
+  
   // State
   const [devices, setDevices] = useState<Device[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -800,18 +803,22 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
             >
               {viewMode === 'grid' ? '📋 Danh sách' : '🎯 Lưới'}
             </button>
-            <button 
-              onClick={() => setShowAddForm(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              ➕ Thêm thiết bị
-            </button>
-            <button 
-              onClick={() => setShowImportModal(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              📤 Import
-            </button>
+            {isAdmin() && (
+              <>
+                <button 
+                  onClick={() => setShowAddForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  ➕ Thêm thiết bị
+                </button>
+                <button 
+                  onClick={() => setShowImportModal(true)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  📥 Import
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -957,18 +964,22 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                     >
                       👁️ Xem
                     </button>
-                    <button 
-                      onClick={() => handleEdit(device)}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
-                    >
-                      ✏️
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(device.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                    >
-                      🗑️
-                    </button>
+                    {isAdmin() && (
+                      <>
+                        <button 
+                          onClick={() => handleEdit(device)}
+                          className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(device.id)}
+                          className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+                        >
+                          🗑️
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1050,18 +1061,22 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                           >
                             👁️
                           </button>
-                          <button 
-                            onClick={() => handleEdit(device)}
-                            className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
-                          >
-                            ✏️
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(device.id)}
-                            className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                          >
-                            🗑️
-                          </button>
+                          {isAdmin() && (
+                            <>
+                              <button 
+                                onClick={() => handleEdit(device)}
+                                className="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600"
+                              >
+                                ✏️
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(device.id)}
+                                className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
+                              >
+                                🗑️
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1085,12 +1100,14 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                 : 'Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm'
               }
             </p>
-            <button 
-              onClick={() => setShowAddForm(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              ➕ Thêm thiết bị
-            </button>
+            {isAdmin() && devices.length === 0 && (
+              <button 
+                onClick={() => setShowAddForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                ➕ Thêm thiết bị
+              </button>
+            )}
           </div>
         )}
 

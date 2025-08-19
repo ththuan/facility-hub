@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { authManager, User } from '@/lib/authManager';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { SupabaseAuthService, User } from '@/lib/supabaseAuthService';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const checkAuth = async () => {
       try {
-        const currentUser = authManager.getCurrentUser();
+        const currentUser = await SupabaseAuthService.getCurrentUser();
         if (isMounted) {
           setUser(currentUser);
           setIsLoading(false);
@@ -58,22 +58,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [pathname, router]);
 
   const login = useCallback(async (username: string, password: string) => {
-    const result = await authManager.login(username, password);
+    const result = await SupabaseAuthService.login(username, password);
     if (result.success && result.user) {
       setUser(result.user);
     }
     return result;
   }, []);
 
-  const logout = () => {
-    authManager.logout();
+  const logout = async () => {
+    await SupabaseAuthService.logout();
     setUser(null);
     router.push('/');
   };
 
   const updateUser = async (updatedUser: User): Promise<void> => {
-    const success = authManager.updateUser(updatedUser.id, updatedUser);
-    if (success) {
+    const result = await SupabaseAuthService.updateUser(updatedUser.id, {
+      username: updatedUser.username,
+      email: updatedUser.email,
+      full_name: updatedUser.full_name,
+      role_id: updatedUser.role.id,
+      department: updatedUser.department,
+      phone: updatedUser.phone,
+      position: updatedUser.position,
+      status: updatedUser.status
+    });
+    if (result.success) {
       setUser(updatedUser);
     } else {
       throw new Error('Không thể cập nhật thông tin người dùng');
@@ -81,19 +90,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const hasPermission = (module: string, action: string): boolean => {
-    return authManager.hasPermission(module, action);
+    if (!user) return false;
+    return user.role.permissions.some(permission => 
+      permission.module === module && permission.actions.includes(action)
+    );
   };
 
   const hasRole = (roleName: string): boolean => {
-    return authManager.hasRole(roleName);
+    return user?.role.name === roleName || false;
   };
 
   const canAccess = (requiredRole: string): boolean => {
-    return authManager.canAccess(requiredRole);
+    if (!user) return false;
+    const roleLevel = user.role.level;
+    const requiredLevel = {
+      'admin': 1,
+      'manager': 2,
+      'staff': 3,
+      'viewer': 4
+    }[requiredRole] || 999;
+    
+    return roleLevel <= requiredLevel;
   };
 
   const isAdmin = (): boolean => {
-    return authManager.isAdmin();
+    return user?.role.name === 'admin' || false;
   };
 
   return (
