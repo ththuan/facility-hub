@@ -312,7 +312,7 @@ export class SupabaseAuthService {
       return [];
     }
 
-    return data.map(userData => ({
+    return data.map((userData: any) => ({
       id: userData.id,
       username: userData.username,
       email: userData.email,
@@ -514,7 +514,7 @@ export class SupabaseAuthService {
       return [];
     }
 
-    return data.map(role => ({
+    return data.map((role: any) => ({
       id: role.id,
       name: role.name,
       display_name: role.display_name,

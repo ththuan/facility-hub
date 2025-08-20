@@ -64,8 +64,8 @@ function DashboardPage() {
     pendingTasks: tasks.filter(t => t.status === 'todo' || t.status === 'doing').length,
     completedTasks: tasks.filter(t => t.status === 'done').length,
     totalWorkOrders: workOrders.length,
-    openWorkOrders: workOrders.filter(w => w.status === 'open' || w.status === 'in_progress').length,
-    completedWorkOrders: workOrders.filter(w => w.status === 'done').length,
+    openWorkOrders: workOrders.filter(w => w.status === 'pending' || w.status === 'working').length,
+    completedWorkOrders: workOrders.filter(w => w.status === 'completed').length,
   };
 
   // Recent work orders (last 5)
@@ -174,9 +174,9 @@ function DashboardPage() {
             {recentWorkOrders.length > 0 ? recentWorkOrders.map((workOrder) => (
               <div key={workOrder.id} className="flex items-start space-x-3">
                 <div className={`w-2 h-2 rounded-full mt-2 ${
-                  workOrder.status === 'open' ? 'bg-blue-500' :
-                  workOrder.status === 'in_progress' ? 'bg-orange-500' :
-                  workOrder.status === 'done' ? 'bg-green-500' :
+                  workOrder.status === 'pending' ? 'bg-blue-500' :
+                  workOrder.status === 'working' ? 'bg-orange-500' :
+                  workOrder.status === 'completed' ? 'bg-green-500' :
                   'bg-gray-500'
                 }`}></div>
                 <div className="flex-1">

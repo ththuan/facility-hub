@@ -30,10 +30,10 @@ export class FileStorageService {
         throw new Error(`Cannot access storage: ${bucketError.message}`);
       }
 
-      const bucketExists = buckets?.some(b => b.id === bucket);
+      const bucketExists = buckets?.some((b: any) => b.id === bucket);
       if (!bucketExists) {
         console.error('❌ Bucket not found:', bucket);
-        console.log('Available buckets:', buckets?.map(b => b.id));
+        console.log('Available buckets:', buckets?.map((b: any) => b.id));
         throw new Error(`Storage bucket '${bucket}' does not exist. Please run the setup script first.`);
       }
 

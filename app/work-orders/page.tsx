@@ -6,9 +6,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const getStatusColor = (status: WorkOrder['status']) => {
   switch (status) {
-    case 'open': return 'bg-blue-100 text-blue-800';
-    case 'in_progress': return 'bg-yellow-100 text-yellow-800';
-    case 'done': return 'bg-green-100 text-green-800';
+    case 'pending': return 'bg-blue-100 text-blue-800';
+    case 'working': return 'bg-yellow-100 text-yellow-800';
+    case 'completed': return 'bg-green-100 text-green-800';
     default: return 'bg-gray-100 text-gray-800';
   }
 };
@@ -24,9 +24,9 @@ const getPriorityColor = (priority: WorkOrder['priority']) => {
 
 const getStatusText = (status: WorkOrder['status']) => {
   switch (status) {
-    case 'open': return 'Mở';
-    case 'in_progress': return 'Đang xử lý';
-    case 'done': return 'Hoàn thành';
+    case 'pending': return 'Mở';
+    case 'working': return 'Đang xử lý';
+    case 'completed': return 'Hoàn thành';
     default: return status;
   }
 };
@@ -55,11 +55,10 @@ export default function WorkOrdersPage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    status: "open" as WorkOrder['status'],
+    status: "pending" as WorkOrder['status'],
     priority: "med" as WorkOrder['priority'],
     assignee: "",
-    dueDate: "",
-    roomId: "",
+    scheduledDate: "",
     deviceId: "",
   });
 
@@ -119,8 +118,7 @@ export default function WorkOrdersPage() {
       status: workOrder.status,
       priority: workOrder.priority,
       assignee: workOrder.assignee || "",
-      dueDate: workOrder.dueDate || "",
-      roomId: workOrder.roomId || "",
+      scheduledDate: workOrder.scheduledDate || "",
       deviceId: workOrder.deviceId || "",
     });
     setShowAddForm(true);
@@ -142,11 +140,10 @@ export default function WorkOrdersPage() {
     setFormData({
       title: "",
       description: "",
-      status: "open",
+      status: "pending",
       priority: "med",
       assignee: "",
-      dueDate: "",
-      roomId: "",
+      scheduledDate: "",
       deviceId: "",
     });
     setEditingWorkOrder(null);
@@ -189,21 +186,21 @@ export default function WorkOrdersPage() {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Đang mở</h3>
             <p className="text-3xl font-bold text-blue-600">
-              {workOrders.filter(w => w.status === 'open').length}
+              {workOrders.filter(w => w.status === 'pending').length}
             </p>
           </div>
           
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Đang xử lý</h3>
             <p className="text-3xl font-bold text-yellow-600">
-              {workOrders.filter(w => w.status === 'in_progress').length}
+              {workOrders.filter(w => w.status === 'working').length}
             </p>
           </div>
           
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Hoàn thành</h3>
             <p className="text-3xl font-bold text-green-600">
-              {workOrders.filter(w => w.status === 'done').length}
+              {workOrders.filter(w => w.status === 'completed').length}
             </p>
           </div>
         </div>
@@ -225,9 +222,9 @@ export default function WorkOrdersPage() {
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             >
               <option value="">Tất cả trạng thái</option>
-              <option value="open">Đang mở</option>
-              <option value="in_progress">Đang xử lý</option>
-              <option value="done">Hoàn thành</option>
+              <option value="pending">Đang mở</option>
+              <option value="working">Đang xử lý</option>
+              <option value="completed">Hoàn thành</option>
             </select>
 
             <select
@@ -312,7 +309,7 @@ export default function WorkOrdersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {getRoomName(workOrder.roomId)}
+                      -
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                       {getDeviceName(workOrder.deviceId)}
@@ -321,7 +318,7 @@ export default function WorkOrdersPage() {
                       {workOrder.assignee || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                      {workOrder.dueDate ? formatDate(workOrder.dueDate) : '-'}
+                      {workOrder.scheduledDate ? formatDate(workOrder.scheduledDate) : '-'}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium space-x-2">
                       {isAdmin() && (
@@ -398,9 +395,9 @@ export default function WorkOrdersPage() {
                       onChange={(e) => setFormData({...formData, status: e.target.value as WorkOrder['status']})}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     >
-                      <option value="open">Đang mở</option>
-                      <option value="in_progress">Đang xử lý</option>
-                      <option value="done">Hoàn thành</option>
+                      <option value="pending">Đang mở</option>
+                      <option value="working">Đang xử lý</option>
+                      <option value="completed">Hoàn thành</option>
                     </select>
                   </div>
 
@@ -420,23 +417,7 @@ export default function WorkOrdersPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Phòng
-                    </label>
-                    <select
-                      value={formData.roomId}
-                      onChange={(e) => setFormData({...formData, roomId: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="">Chọn phòng</option>
-                      {rooms.map(room => (
-                        <option key={room.id} value={room.id}>{room.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Thiết bị
@@ -472,8 +453,8 @@ export default function WorkOrdersPage() {
                   </label>
                   <input
                     type="date"
-                    value={formData.dueDate}
-                    onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
+                    value={formData.scheduledDate}
+                    onChange={(e) => setFormData({...formData, scheduledDate: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
