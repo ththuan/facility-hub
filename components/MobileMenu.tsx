@@ -37,6 +37,27 @@ export default function MobileMenu() {
               🖥️ Thiết bị
             </Link>
             <Link 
+              href="/asset-transfer" 
+              className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+              onClick={() => setIsOpen(false)}
+            >
+              🔄 Điều chuyển
+            </Link>
+            <Link 
+              href="/asset-inventory" 
+              className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+              onClick={() => setIsOpen(false)}
+            >
+              📋 Kiểm kê
+            </Link>
+            <Link 
+              href="/work-orders" 
+              className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+              onClick={() => setIsOpen(false)}
+            >
+              🔧 Work Orders
+            </Link>
+            <Link 
               href="/tasks" 
               className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
               onClick={() => setIsOpen(false)}

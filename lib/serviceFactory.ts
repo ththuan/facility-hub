@@ -37,8 +37,8 @@ export const getRoomService = () => {
     return MockRoomService;
   }
   // Import dynamic để tránh lỗi khi build
-  const { RoomService } = require('./roomService');
-  return RoomService;
+  const { roomService } = require('./roomService');
+  return roomService;
 };
 
 // Export types

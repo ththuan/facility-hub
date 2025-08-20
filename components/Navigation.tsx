@@ -1,103 +1,219 @@
-'use client';
+'use client'
 
-import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
-import ThemeSwitcher from '@/components/ThemeSwitcher';
-import MobileMenu from '@/components/MobileMenu';
-import UserMenu from '@/components/UserMenu';
-import { memo } from 'react';
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import UserMenu from './UserMenu'
+import ThemeSwitcher from './ThemeSwitcher'
+import { useState, useRef, useEffect } from 'react'
 
-const Navigation = memo(function Navigation() {
-  const { user } = useAuth();
+export default function Navigation() {
+  const pathname = usePathname()
+  const { user } = useAuth()
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const moreMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setShowMoreMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  if (!user) {
+    return null
+  }
+
+  const isActive = (path: string) => pathname === path
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 transition-colors relative">
+    <nav className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                Facility Hub
-              </Link>
-            </div>
+            <Link href="/dashboard" className="flex items-center px-4 text-sm font-medium">
+              <span className="font-bold text-xl text-blue-600 dark:text-blue-400">Facility Hub</span>
+            </Link>
             
-            {/* Only show navigation menu if user is logged in */}
-            {user && (
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link href="/dashboard" className="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  📊 Dashboard
-                </Link>
-                <Link href="/devices" className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  🖥️ Thiết bị
-                </Link>
-                <Link href="/work-orders" className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  � Work Orders
-                </Link>
-                <Link href="/tasks" className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  📋 Tasks
-                </Link>
-                <Link href="/calendar" className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  📅 Lịch
-                </Link>
+            <div className="hidden md:ml-6 md:flex md:space-x-8">
+              <Link
+                href="/dashboard"
+                className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
+                  isActive('/dashboard')
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300'
+                }`}
+              >
+                🏠 Dashboard
+              </Link>
+              
+              <Link
+                href="/devices"
+                className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
+                  isActive('/devices')
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300'
+                }`}
+              >
+                🖥️ Thiết bị
+              </Link>
+              
+              <Link
+                href="/rooms"
+                className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
+                  isActive('/rooms')
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300'
+                }`}
+              >
+                🏢 Phòng ban
+              </Link>
+
+              <Link
+                href="/asset-transfer"
+                className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
+                  isActive('/asset-transfer')
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300'
+                }`}
+              >
+                🔄 Điều chuyển
+              </Link>
+
+              <Link
+                href="/asset-inventory"
+                className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
+                  isActive('/asset-inventory')
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300'
+                }`}
+              >
+                📋 Kiểm kê
+              </Link>
+
+              <Link
+                href="/procurement"
+                className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
+                  isActive('/procurement')
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300'
+                }`}
+              >
+                🛒 Mua sắm
+              </Link>
+              
+              <Link
+                href="/work-orders"
+                className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
+                  isActive('/work-orders')
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300'
+                }`}
+              >
+                🔧 Bảo trì
+              </Link>
+
+              {/* More Menu Dropdown */}
+              <div className="relative" ref={moreMenuRef}>
+                <button
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  className={`inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 ${
+                    ['/calendar', '/tasks', '/analytics', '/qr-generator', '/admin', '/documents'].some(path => pathname.startsWith(path))
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  ⚙️ Khác
+                  <svg className="ml-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
                 
-                {/* Dropdown Menu cho các tính năng khác */}
-                <div className="relative group">
-                  <button className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
-                    ⚙️ Khác
-                    <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                {showMoreMenu && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 z-50">
                     <div className="py-1">
-                      <Link href="/rooms" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        🏢 Phòng ban
+                      <Link
+                        href="/documents"
+                        className={`block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          isActive('/documents') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
+                        }`}
+                        onClick={() => setShowMoreMenu(false)}
+                      >
+                        📁 Tài liệu
                       </Link>
-                      <Link href="/documents" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        📄 Tài liệu
+                      <Link
+                        href="/calendar"
+                        className={`block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          isActive('/calendar') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
+                        }`}
+                        onClick={() => setShowMoreMenu(false)}
+                      >
+                        📅 Lịch làm việc
                       </Link>
-                      <Link href="/procurement" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        🛒 Mua sắm hàng năm
+                      <Link
+                        href="/tasks"
+                        className={`block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          isActive('/tasks') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
+                        }`}
+                        onClick={() => setShowMoreMenu(false)}
+                      >
+                        ✅ Công việc
                       </Link>
-                      <Link href="/qr-generator" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        📱 QR Code
+                      <Link
+                        href="/analytics"
+                        className={`block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          isActive('/analytics') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
+                        }`}
+                        onClick={() => setShowMoreMenu(false)}
+                      >
+                        📊 Báo cáo
                       </Link>
-                      <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-                      <Link href="/analytics" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        📈 Analytics
+                      <Link
+                        href="/qr-generator"
+                        className={`block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          isActive('/qr-generator') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
+                        }`}
+                        onClick={() => setShowMoreMenu(false)}
+                      >
+                        📱 Tạo mã QR
                       </Link>
-                      <Link href="/notifications" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        🔔 Thông báo
-                      </Link>
-                      <Link href="/import" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        📥 Import
-                      </Link>
-                      <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
-                      <Link href="/email-settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        📧 Email Settings
-                      </Link>
-                      <Link href="/backup" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        💾 Backup
-                      </Link>
-                      <Link href="/user-roles" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        👥 User Roles
-                      </Link>
+                      <div className="border-t border-gray-200 dark:border-gray-600 mt-1 pt-1">
+                        <Link
+                          href="/admin/users"
+                          className={`block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                            pathname.startsWith('/admin') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
+                          }`}
+                          onClick={() => setShowMoreMenu(false)}
+                        >
+                          👥 Quản lý người dùng
+                        </Link>
+                        <Link
+                          href="/admin/settings"
+                          className={`block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                            pathname.startsWith('/admin') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
+                          }`}
+                          onClick={() => setShowMoreMenu(false)}
+                        >
+                          ⚙️ Cài đặt hệ thống
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
             <ThemeSwitcher />
-            {user && <MobileMenu />}
             <UserMenu />
           </div>
         </div>
       </div>
     </nav>
-  );
-});
-
-export default Navigation;
+  )
+}

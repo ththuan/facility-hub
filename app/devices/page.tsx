@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { supabaseService, Device, Room } from "@/lib/supabaseService";
+import { getRoomService, getDeviceService } from "@/lib/serviceFactory";
+import type { Device, Room } from "@/lib/serviceFactory";
 import { useAuth } from "@/contexts/AuthContext";
+
+// Get service instances
+const deviceService = getDeviceService();
+const roomService = getRoomService();
 
 const getStatusText = (status: string) => {
   switch (status) {
@@ -61,7 +66,7 @@ export default function DevicesPage() {
     code: "",
     name: "",
     category: "",
-    unit: "",
+    unit: "Chiếc", // Default unit value
     image: "",
     purchaseYear: new Date().getFullYear(),
     warrantyUntil: "",
@@ -78,14 +83,13 @@ export default function DevicesPage() {
   const loadData = async () => {
     try {
       const [devicesData, roomsData] = await Promise.all([
-        supabaseService.getDevices(),
-        supabaseService.getRooms(),
+        deviceService.getDevices(),
+        roomService.getRooms(),
       ]);
       
       setDevices(devicesData);
       setRooms(roomsData);
-      console.log('✅ Loaded devices:', devicesData.length);
-      console.log('✅ Loaded rooms:', roomsData.length);
+      console.log('🏢 Loaded rooms for dropdown:', roomsData.length, roomsData);
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Lỗi khi tải dữ liệu. Vui lòng thử lại!');
@@ -129,26 +133,24 @@ export default function DevicesPage() {
         imageUrl = imagePreview; // Use preview as URL for demo
       }
       
-      const deviceData: Omit<Device, 'id' | 'createdAt' | 'updatedAt'> = {
+      const deviceData: Omit<Device, 'id' | 'created_at' | 'updated_at'> = {
         code: formData.code,
         name: formData.name,
         category: formData.category,
         unit: formData.unit,
         image: imageUrl,
-        purchaseYear: formData.purchaseYear,
-        warrantyUntil: formData.warrantyUntil || undefined,
-        roomId: formData.roomId || undefined,
+        purchase_year: formData.purchaseYear,
+        warranty_until: formData.warrantyUntil || undefined,
+        room_id: formData.roomId || undefined,
         status: formData.status,
         quantity: formData.quantity,
         meta: {},
       };
       
       if (editingDevice) {
-        await supabaseService.updateDevice(editingDevice.id, deviceData);
-        console.log('✅ Device updated successfully');
+        await deviceService.updateDevice(editingDevice.id, deviceData);
       } else {
-        const newDevice = await supabaseService.createDevice(deviceData);
-        console.log('✅ Device created:', newDevice);
+        const newDevice = await deviceService.createDevice(deviceData);
       }
       
       await loadData();
@@ -167,9 +169,9 @@ export default function DevicesPage() {
       category: device.category,
       unit: device.unit,
       image: device.image || '',
-      purchaseYear: device.purchaseYear || new Date().getFullYear(),
-      warrantyUntil: device.warrantyUntil || '',
-      roomId: device.roomId || '',
+      purchaseYear: device.purchase_year || new Date().getFullYear(),
+      warrantyUntil: device.warranty_until || '',
+      roomId: device.room_id || '',
       status: device.status,
       quantity: device.quantity,
     });
@@ -184,9 +186,8 @@ export default function DevicesPage() {
   const handleDelete = async (id: string) => {
     if (confirm("Bạn có chắc chắn muốn xóa thiết bị này?")) {
       try {
-        const result = await supabaseService.deleteDevice(id);
+        const result = await deviceService.deleteDevice(id);
         if (result) {
-          console.log('✅ Device deleted successfully');
           await loadData();
         } else {
           alert('Không thể xóa thiết bị này. Vui lòng thử lại!');
@@ -275,8 +276,6 @@ export default function DevicesPage() {
         quantity: row.quantity || row['Số lượng'] || row['Quantity'] || 1,
         image: row.image || row['Hình ảnh'] || row['Image'] || undefined,
       }));
-
-      console.log('📤 Sending import request:', devices);
 
       const response = await fetch('/api/devices/import', {
         method: 'POST',
@@ -385,7 +384,7 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
   // Get unique values for filters
   const uniqueCategories = Array.from(new Set(devices.map(d => d.category)));
   const uniqueUnits = Array.from(new Set(devices.map(d => d.unit)));
-  const uniqueYears = Array.from(new Set(devices.map(d => d.purchaseYear).filter(Boolean))).sort((a, b) => b! - a!);
+  const uniqueYears = Array.from(new Set(devices.map(d => d.purchase_year).filter(Boolean))).sort((a, b) => b! - a!);
 
   // Filter devices
   const filteredDevices = devices.filter(device => {
@@ -395,8 +394,8 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
     const matchesCategory = categoryFilter === "" || device.category === categoryFilter;
     const matchesStatus = statusFilter === "" || device.status === statusFilter;
     const matchesUnit = unitFilter === "" || device.unit === unitFilter;
-    const matchesRoom = roomFilter === "" || device.roomId === roomFilter;
-    const matchesYear = yearFilter === "" || device.purchaseYear?.toString() === yearFilter;
+    const matchesRoom = roomFilter === "" || device.room_id === roomFilter;
+    const matchesYear = yearFilter === "" || device.purchase_year?.toString() === yearFilter;
     
     return matchesSearch && matchesCategory && matchesStatus && matchesUnit && matchesRoom && matchesYear;
   });
@@ -454,7 +453,7 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
   const DeviceDetailModal = () => {
     if (!viewingDevice) return null;
 
-    const warranty = getWarrantyStatus(viewingDevice.warrantyUntil);
+    const warranty = getWarrantyStatus(viewingDevice.warranty_until);
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -528,11 +527,11 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                   <div className="space-y-2 text-sm bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                     <div className="flex justify-between">
                       <span className="font-medium">Phòng:</span>
-                      <span>{getRoomName(viewingDevice.roomId || '')}</span>
+                      <span>{getRoomName(viewingDevice.room_id || '')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">Năm mua:</span>
-                      <span>{viewingDevice.purchaseYear || 'Chưa có'}</span>
+                      <span>{viewingDevice.purchase_year || 'Chưa có'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">Bảo hành:</span>
@@ -540,7 +539,7 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">Ngày tạo:</span>
-                      <span>{formatDate(viewingDevice.createdAt)}</span>
+                      <span>{formatDate(viewingDevice.created_at)}</span>
                     </div>
                   </div>
                 </div>
@@ -640,20 +639,6 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                   onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
                   placeholder="VD: Thiết bị giảng dạy"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  🏢 Đơn vị/Khoa *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.unit}
-                  onChange={(e) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="VD: Khoa Công nghệ thông tin"
                 />
               </div>
             </div>
@@ -901,13 +886,13 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
           </div>
           <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow">
             <div className="text-2xl font-bold text-green-600">
-              {devices.filter(d => d.status === 'good').length}
+              {devices.filter(d => d.status === 'Tốt').length}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Thiết bị tốt</div>
           </div>
           <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow">
             <div className="text-2xl font-bold text-red-600">
-              {devices.filter(d => d.status === 'broken').length}
+              {devices.filter(d => d.status === 'Hư').length}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Cần sửa chữa</div>
           </div>
@@ -952,8 +937,8 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                   <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400 mb-3">
                     <div>📂 {device.category}</div>
                     <div>🏢 {device.unit}</div>
-                    <div>📍 {getRoomName(device.roomId || '')}</div>
-                    <div>📅 {device.purchaseYear || 'N/A'}</div>
+                    <div>📍 {getRoomName(device.room_id || '')}</div>
+                    <div>📅 {device.purchase_year || 'N/A'}</div>
                     <div>📊 SL: {device.quantity}</div>
                   </div>
                   
@@ -1036,7 +1021,7 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                         <div className="text-gray-500 dark:text-gray-400">{device.unit}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {getRoomName(device.roomId || '')}
+                        {getRoomName(device.room_id || '')}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(device.status)}`}>
@@ -1044,7 +1029,7 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        <div>{device.purchaseYear || 'N/A'}</div>
+                        <div>{device.purchase_year || 'N/A'}</div>
                         <div className="text-gray-500 dark:text-gray-400">SL: {device.quantity}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">

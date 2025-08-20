@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { supabaseService } from '@/lib/supabaseService';
 
 interface AnalyticsData {
   totalDevices: number;
   totalRooms: number;
-  totalWorkOrders: number;
-  completedWorkOrders: number;
   devicesByCategory: { [key: string]: number };
-  workOrdersByStatus: { [key: string]: number };
-  roomsByStatus: { [key: string]: number };
+  devicesByStatus: { [key: string]: number };
+  roomsByFloor: { [key: string]: number };
 }
 
 export default function AnalyticsPage() {
@@ -21,36 +20,53 @@ export default function AnalyticsPage() {
   }, []);
 
   const generateAnalytics = async () => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockData: AnalyticsData = {
-      totalDevices: 150,
-      totalRooms: 25,
-      totalWorkOrders: 45,
-      completedWorkOrders: 32,
-      devicesByCategory: {
-        'Máy tính': 25,
-        'Thiết bị văn phòng': 18,
-        'Thiết bị trình chiếu': 8,
-        'Thiết bị mạng': 12,
-        'Khác': 7
-      },
-      workOrdersByStatus: {
-        'Mở': 12,
-        'Đang xử lý': 15,
-        'Hoàn thành': 8,
-        'Đóng': 10
-      },
-      roomsByStatus: {
-        'Hoạt động': 20,
-        'Bảo trì': 3,
-        'Ngưng sử dụng': 2
-      }
-    };
+    try {
+      const [devicesData, roomsData] = await Promise.all([
+        supabaseService.getDevices(),
+        supabaseService.getRooms()
+      ]);
 
-    setAnalytics(mockData);
-    setLoading(false);
+      // Calculate device statistics from real data
+      const devicesByCategory: { [key: string]: number } = {};
+      const devicesByStatus: { [key: string]: number } = {};
+      
+      devicesData.forEach(device => {
+        const category = device.category || 'Khác';
+        devicesByCategory[category] = (devicesByCategory[category] || 0) + 1;
+        
+        const status = device.status || 'Không xác định';
+        devicesByStatus[status] = (devicesByStatus[status] || 0) + 1;
+      });
+
+      // Calculate room statistics from real data  
+      const roomsByFloor: { [key: string]: number } = {};
+      roomsData.forEach(room => {
+        const floor = room.code?.charAt(0) || '1'; // Extract floor from room code
+        roomsByFloor[`Tầng ${floor}`] = (roomsByFloor[`Tầng ${floor}`] || 0) + 1;
+      });
+
+      const realData: AnalyticsData = {
+        totalDevices: devicesData.length,
+        totalRooms: roomsData.length,
+        devicesByCategory,
+        devicesByStatus,
+        roomsByFloor
+      };
+
+      setAnalytics(realData);
+    } catch (error) {
+      console.error('❌ Error loading analytics:', error);
+      // Fallback to mock data if error
+      setAnalytics({
+        totalDevices: 0,
+        totalRooms: 0,
+        devicesByCategory: {},
+        devicesByStatus: {},
+        roomsByFloor: {}
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -88,13 +104,13 @@ export default function AnalyticsPage() {
         </div>
         
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-700">Tổng công việc</h3>
-          <p className="text-3xl font-bold text-orange-600">{analytics.totalWorkOrders}</p>
+          <h3 className="text-lg font-semibold text-gray-700">Thiết bị hoạt động</h3>
+          <p className="text-3xl font-bold text-green-600">{analytics.devicesByStatus?.['good'] || 0}</p>
         </div>
         
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-700">Công việc hoàn thành</h3>
-          <p className="text-3xl font-bold text-purple-600">{analytics.completedWorkOrders}</p>
+          <h3 className="text-lg font-semibold text-gray-700">Thiết bị cần bảo trì</h3>
+          <p className="text-3xl font-bold text-orange-600">{(analytics.devicesByStatus?.['maintenance'] || 0) + (analytics.devicesByStatus?.['broken'] || 0)}</p>
         </div>
       </div>
       
@@ -112,11 +128,11 @@ export default function AnalyticsPage() {
         </div>
         
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Công việc theo trạng thái</h2>
+          <h2 className="text-xl font-semibold mb-4">Phòng theo tầng</h2>
           <div className="space-y-3">
-            {Object.entries(analytics.workOrdersByStatus).map(([status, count]) => (
-              <div key={status} className="flex justify-between items-center">
-                <span className="text-gray-700">{status}</span>
+            {Object.entries(analytics.roomsByFloor).map(([floor, count]) => (
+              <div key={floor} className="flex justify-between items-center">
+                <span className="text-gray-700">{floor}</span>
                 <span className="font-semibold">{count}</span>
               </div>
             ))}

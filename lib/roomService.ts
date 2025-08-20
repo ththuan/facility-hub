@@ -24,6 +24,15 @@ export class RoomService {
     return supabaseBrowser();
   }
 
+  // Instance methods for compatibility
+  async getRooms(): Promise<Room[]> {
+    return RoomService.getAllRooms();
+  }
+
+  async createRoom(room: Omit<Room, 'id' | 'created_at' | 'updated_at'>): Promise<Room> {
+    return RoomService.createRoom(room);
+  }
+
   static async getAllRooms(): Promise<Room[]> {
     const supabase = this.getSupabase();
     const { data, error } = await supabase
