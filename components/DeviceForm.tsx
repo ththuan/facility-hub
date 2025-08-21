@@ -12,6 +12,18 @@ interface DeviceFormProps {
 }
 
 export default function DeviceForm({ device, rooms, isOpen, onClose, onSubmit }: DeviceFormProps) {
+  // Fallback rooms data if no rooms provided
+  const fallbackRooms = [
+    { id: '1', code: 'P101', name: 'Phòng học 101' },
+    { id: '2', code: 'P102', name: 'Phòng học 102' },
+    { id: '3', code: 'P201', name: 'Phòng học 201' },
+    { id: '4', code: 'LAB01', name: 'Phòng thí nghiệm 1' },
+    { id: '5', code: 'HT01', name: 'Hội trường lớn' },
+  ];
+  
+  const availableRooms = rooms && rooms.length > 0 ? rooms : fallbackRooms;
+  console.log('🏢 DeviceForm - Available rooms:', availableRooms.length, availableRooms);
+  
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -220,7 +232,7 @@ export default function DeviceForm({ device, rooms, isOpen, onClose, onSubmit }:
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">-- Chọn phòng --</option>
-                {rooms.map(room => (
+                {availableRooms.map(room => (
                   <option key={room.id} value={room.id}>
                     {room.code} - {room.name}
                   </option>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { getRoomService, getDeviceService } from "@/lib/serviceFactory";
 import type { Device, Room } from "@/lib/serviceFactory";
 import { useAuth } from "@/contexts/AuthContext";
+import DeviceForm from "@/components/DeviceForm";
 
 // Get service instances
 const deviceService = getDeviceService();
@@ -121,6 +122,52 @@ export default function DevicesPage() {
   };
 
   // Handle form submission
+  // Handler for DeviceForm component submission
+  const handleDeviceFormSubmit = async (formData: any, selectedImage: File | null) => {
+    try {
+      let imageUrl = formData.image;
+      
+      // If there's a selected image, simulate upload
+      if (selectedImage) {
+        // In a real app, you'd upload to cloud storage
+        const reader = new FileReader();
+        reader.onload = () => {
+          imageUrl = reader.result as string;
+        };
+        reader.readAsDataURL(selectedImage);
+      }
+      
+      const deviceData: Omit<Device, 'id' | 'created_at' | 'updated_at'> = {
+        code: formData.code,
+        name: formData.name,
+        category: formData.category,
+        unit: formData.unit,
+        image: imageUrl,
+        purchase_year: formData.purchaseYear,
+        warranty_until: formData.warrantyUntil || undefined,
+        room_id: formData.roomId || undefined,
+        status: formData.status,
+        quantity: formData.quantity,
+        meta: {},
+      };
+      
+      if (editingDevice) {
+        await deviceService.updateDevice(editingDevice.id!, deviceData);
+      } else {
+        await deviceService.createDevice(deviceData);
+      }
+      
+      // Reload devices and close form
+      await loadData();
+      setShowAddForm(false);
+      setEditingDevice(null);
+      
+    } catch (error) {
+      console.error('Error saving device:', error);
+      alert('Có lỗi khi lưu thiết bị');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -584,6 +631,26 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
   };
 
   // Add/Edit Form Modal
+  // New modal using DeviceForm component
+  const DeviceFormModal2 = () => {
+    if (!showAddForm) return null;
+
+    console.log('🏢 DeviceFormModal2 - rooms data:', rooms.length, rooms);
+    
+    return (
+      <DeviceForm
+        device={editingDevice}
+        rooms={rooms}
+        isOpen={showAddForm}
+        onClose={() => {
+          setShowAddForm(false);
+          setEditingDevice(null);
+        }}
+        onSubmit={handleDeviceFormSubmit}
+      />
+    );
+  };
+
   const DeviceFormModal = () => {
     if (!showAddForm) return null;
 
@@ -833,7 +900,6 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
             onChange={(e) => setUnitFilter(e.target.value)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">🏢 Tất cả đơn vị</option>
             {uniqueUnits.map((unit) => (
               <option key={unit} value={unit}>{unit}</option>
             ))}
@@ -1097,7 +1163,7 @@ TB003,Máy in laser,Máy in,Văn phòng,2021,,VP01,broken,2,`;
         )}
 
         {/* Modals */}
-        <DeviceFormModal />
+        <DeviceFormModal2 />
         <DeviceDetailModal />
         <QRCodeModal />
         <ImportModal />

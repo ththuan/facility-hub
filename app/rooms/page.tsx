@@ -46,13 +46,44 @@ export default function RoomsPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await RoomService.getAllRooms();
+      const data = await RoomService.getRooms();
       setRooms(data);
+      console.log('🏢 Loaded rooms:', data.length, data);
+      
+      // If no rooms, create sample data
+      if (data.length === 0) {
+        console.log('📝 No rooms found, creating sample data...');
+        await createSampleRooms();
+      }
+      
     } catch (err) {
       console.error('Error loading rooms:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Create sample rooms for testing
+  const createSampleRooms = async () => {
+    const sampleRooms = [
+      { code: 'P101', name: 'Phòng học 101', type: 'Phòng học', building: 'Nhà A', floor: 'Tầng 1', capacity: 40, area: 60, status: 'Hoạt động' as const },
+      { code: 'P102', name: 'Phòng học 102', type: 'Phòng học', building: 'Nhà A', floor: 'Tầng 1', capacity: 45, area: 65, status: 'Hoạt động' as const },
+      { code: 'P201', name: 'Phòng học 201', type: 'Phòng học', building: 'Nhà A', floor: 'Tầng 2', capacity: 50, area: 70, status: 'Hoạt động' as const },
+      { code: 'LAB01', name: 'Phòng thí nghiệm 1', type: 'Phòng thí nghiệm', building: 'Nhà B', floor: 'Tầng 1', capacity: 30, area: 80, status: 'Hoạt động' as const },
+      { code: 'HT01', name: 'Hội trường lớn', type: 'Hội trường', building: 'Nhà C', floor: 'Tầng 1', capacity: 200, area: 300, status: 'Hoạt động' as const },
+    ];
+
+    try {
+      for (const room of sampleRooms) {
+        await RoomService.createRoom(room);
+      }
+      console.log('✅ Sample rooms created');
+      // Reload rooms after creating samples
+      const data = await RoomService.getRooms();
+      setRooms(data);
+    } catch (error) {
+      console.error('❌ Error creating sample rooms:', error);
     }
   };
 
